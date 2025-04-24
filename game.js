@@ -6,10 +6,10 @@ class SimitciRun extends Phaser.Scene {
   }
 
   preload() {
-    this.load.image("simitci", "assets/simitci.png");
-    this.load.image("marti", "assets/marti.png");
-    this.load.image("zemin", "assets/zemin.png");
-    this.load.image("cay", "assets/cay.png");
+    this.load.image("simitci", "https://img.icons8.com/ios/452/bagel.png");
+    this.load.image("marti", "https://img.icons8.com/ios/452/seagull.png");
+    this.load.image("zemin", "https://img.icons8.com/ios/452/road.png");
+    this.load.image("cay", "https://img.icons8.com/ios/452/tea.png");
   }
 
   create() {
@@ -24,21 +24,26 @@ class SimitciRun extends Phaser.Scene {
     this.zamanlayici = this.time.addEvent({
       delay: 2000,
       callback: () => this.spawnMarti(),
-      loop: true
+      loop: true,
     });
 
     this.caylar = this.physics.add.group();
     this.time.addEvent({
       delay: 5000,
       callback: () => this.spawnCay(),
-      loop: true
+      loop: true,
     });
 
     this.physics.add.overlap(this.player, this.martilar, this.hitMarti, null, this);
     this.physics.add.overlap(this.player, this.caylar, this.collectCay, null, this);
 
+    // Skorun başlangıcı
     this.skork = 0;
     this.scoreText = this.add.text(16, 16, 'Skor: 0', { fontSize: '24px', fill: '#fff' });
+
+    // LocalStorage'tan yüksek skoru al
+    this.highScore = localStorage.getItem('highScore') || 0;
+    this.highScoreText = this.add.text(16, 50, 'Yüksek Skor: ' + this.highScore, { fontSize: '24px', fill: '#fff' });
   }
 
   update() {
@@ -69,6 +74,13 @@ class SimitciRun extends Phaser.Scene {
     this.physics.pause();
     player.setTint(0xff0000);
     this.add.text(300, 250, 'Game Over', { fontSize: '32px', fill: '#fff' });
+
+    // Skor kaydetme
+    if (this.skork > this.highScore) {
+      localStorage.setItem('highScore', this.skork);
+      this.highScore = this.skork;
+      this.highScoreText.setText('Yüksek Skor: ' + this.highScore);
+    }
   }
 
   collectCay(player, cay) {
@@ -80,17 +92,17 @@ class SimitciRun extends Phaser.Scene {
 
 const config = {
   type: Phaser.AUTO,
-  width: 800,
-  height: 600,
+  width: "100%",
+  height: "100%",
   backgroundColor: "#87CEEB",
   physics: {
     default: "arcade",
     arcade: {
       gravity: { y: 300 },
-      debug: false
-    }
+      debug: false,
+    },
   },
-  scene: SimitciRun
+  scene: SimitciRun,
 };
 
 const game = new Phaser.Game(config);
