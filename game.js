@@ -1,4 +1,5 @@
-import Phaser from "phaser";
+// Phaser'ı CDN üzerinden dahil ediyoruz.
+const Phaser = window.Phaser;
 
 class SimitciRun extends Phaser.Scene {
   constructor() {
