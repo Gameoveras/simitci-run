@@ -1,100 +1,8 @@
-// Phaser'ı CDN üzerinden dahil ediyoruz.
-const Phaser = window.Phaser;
-
-class SimitciRun extends Phaser.Scene {
-  constructor() {
-    super("SimitciRun");
-  }
-
-  preload() {
-    this.load.image("simitci", "https://img.icons8.com/ios/452/bagel.png");
-    this.load.image("marti", "https://img.icons8.com/ios/452/seagull.png");
-    this.load.image("zemin", "https://img.icons8.com/ios/452/road.png");
-    this.load.image("cay", "https://img.icons8.com/ios/452/tea.png");
-  }
-
-  create() {
-    this.add.image(400, 300, "zemin");
-
-    this.player = this.physics.add.sprite(100, 450, "simitci");
-    this.player.setCollideWorldBounds(true);
-
-    this.cursors = this.input.keyboard.createCursorKeys();
-
-    this.martilar = this.physics.add.group();
-    this.zamanlayici = this.time.addEvent({
-      delay: 2000,
-      callback: () => this.spawnMarti(),
-      loop: true,
-    });
-
-    this.caylar = this.physics.add.group();
-    this.time.addEvent({
-      delay: 5000,
-      callback: () => this.spawnCay(),
-      loop: true,
-    });
-
-    this.physics.add.overlap(this.player, this.martilar, this.hitMarti, null, this);
-    this.physics.add.overlap(this.player, this.caylar, this.collectCay, null, this);
-
-    // Skorun başlangıcı
-    this.skork = 0;
-    this.scoreText = this.add.text(16, 16, 'Skor: 0', { fontSize: '24px', fill: '#fff' });
-
-    // LocalStorage'tan yüksek skoru al
-    this.highScore = localStorage.getItem('highScore') || 0;
-    this.highScoreText = this.add.text(16, 50, 'Yüksek Skor: ' + this.highScore, { fontSize: '24px', fill: '#fff' });
-  }
-
-  update() {
-    if (this.cursors.left.isDown) {
-      this.player.setVelocityX(-160);
-    } else if (this.cursors.right.isDown) {
-      this.player.setVelocityX(160);
-    } else {
-      this.player.setVelocityX(0);
-    }
-
-    if (this.cursors.up.isDown && this.player.body.touching.down) {
-      this.player.setVelocityY(-330);
-    }
-  }
-
-  spawnMarti() {
-    const marti = this.martilar.create(800, Phaser.Math.Between(300, 500), "marti");
-    marti.setVelocityX(-200);
-  }
-
-  spawnCay() {
-    const cay = this.caylar.create(800, Phaser.Math.Between(100, 500), "cay");
-    cay.setVelocityX(-100);
-  }
-
-  hitMarti(player, marti) {
-    this.physics.pause();
-    player.setTint(0xff0000);
-    this.add.text(300, 250, 'Game Over', { fontSize: '32px', fill: '#fff' });
-
-    // Skor kaydetme
-    if (this.skork > this.highScore) {
-      localStorage.setItem('highScore', this.skork);
-      this.highScore = this.skork;
-      this.highScoreText.setText('Yüksek Skor: ' + this.highScore);
-    }
-  }
-
-  collectCay(player, cay) {
-    cay.disableBody(true, true);
-    this.skork += 10;
-    this.scoreText.setText('Skor: ' + this.skork);
-  }
-}
-
+// Oyun konfigürasyonu
 const config = {
   type: Phaser.AUTO,
-  width: "100%",
-  height: "100%",
+  width: 800,
+  height: 600,
   backgroundColor: "#87CEEB",
   physics: {
     default: "arcade",
@@ -103,7 +11,116 @@ const config = {
       debug: false,
     },
   },
-  scene: SimitciRun,
+  scene: {
+    preload: preload,
+    create: create,
+    update: update
+  }
 };
 
+// Oyun değişkenleri
+let player;
+let cursors;
+let martilar;
+let caylar;
+let skork = 0;
+let scoreText;
+let highScore = 0;
+let highScoreText;
+let zamanlayici;
+
+// Oyun örneği
 const game = new Phaser.Game(config);
+
+function preload() {
+  this.load.image("simitci", "https://img.icons8.com/ios/452/bagel.png");
+  this.load.image("marti", "https://img.icons8.com/ios/452/seagull.png");
+  this.load.image("zemin", "https://img.icons8.com/ios/452/road.png");
+  this.load.image("cay", "https://img.icons8.com/ios/452/tea.png");
+}
+
+function create() {
+  // Zemin ekleme
+  this.add.image(400, 300, "zemin").setScale(2);
+
+  // Oyuncu oluşturma
+  player = this.physics.add.sprite(100, 450, "simitci");
+  player.setCollideWorldBounds(true);
+
+  // Kontroller
+  cursors = this.input.keyboard.createCursorKeys();
+
+  // Martı grubu oluşturma
+  martilar = this.physics.add.group();
+  zamanlayici = this.time.addEvent({
+    delay: 2000,
+    callback: spawnMarti,
+    callbackScope: this,
+    loop: true
+  });
+
+  // Çay grubu oluşturma
+  caylar = this.physics.add.group();
+  this.time.addEvent({
+    delay: 5000,
+    callback: spawnCay,
+    callbackScope: this,
+    loop: true
+  });
+
+  // Çarpışma kontrolü
+  this.physics.add.overlap(player, martilar, hitMarti, null, this);
+  this.physics.add.overlap(player, caylar, collectCay, null, this);
+
+  // Skor başlangıcı
+  skork = 0;
+  scoreText = this.add.text(16, 16, 'Skor: 0', { fontSize: '24px', fill: '#fff' });
+
+  // Yüksek skor
+  highScore = localStorage.getItem('highScore') || 0;
+  highScoreText = this.add.text(16, 50, 'Yüksek Skor: ' + highScore, { fontSize: '24px', fill: '#fff' });
+}
+
+function update() {
+  // Oyuncu hareketleri
+  if (cursors.left.isDown) {
+    player.setVelocityX(-160);
+  } else if (cursors.right.isDown) {
+    player.setVelocityX(160);
+  } else {
+    player.setVelocityX(0);
+  }
+
+  if (cursors.up.isDown && player.body.touching.down) {
+    player.setVelocityY(-330);
+  }
+}
+
+function spawnMarti() {
+  const marti = martilar.create(800, Phaser.Math.Between(300, 500), "marti");
+  marti.setVelocityX(-200);
+}
+
+function spawnCay() {
+  const cay = caylar.create(800, Phaser.Math.Between(100, 500), "cay");
+  cay.setVelocityX(-100);
+}
+
+function hitMarti(player, marti) {
+  this.physics.pause();
+  player.setTint(0xff0000);
+  this.add.text(300, 250, 'Game Over', { fontSize: '32px', fill: '#fff' });
+
+  // Skor kaydetme
+  if (skork > highScore) {
+    localStorage.setItem('highScore', skork);
+    highScore = skork;
+    highScoreText.setText('Yüksek Skor: ' + highScore);
+  }
+}
+
+function collectCay(player, cay) {
+  cay.disableBody(true, true);
+  skork += 10;
+  scoreText.setText('Skor: ' + skork);
+}
