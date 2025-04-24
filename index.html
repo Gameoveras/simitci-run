@@ -12,13 +12,19 @@
       margin: 0;
       background-color: #000;
     }
-    canvas {
-      display: block;
-      margin: 0 auto;
+    #game-container {
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      height: 100vh;
     }
   </style>
+  <!-- Phaser.js CDN -->
+  <script src="https://cdn.jsdelivr.net/npm/phaser@3.55.2/dist/phaser.min.js"></script>
 </head>
 <body>
-  <script type="module" src="game.js"></script>
+  <div id="game-container">
+    <script src="game.js"></script>
+  </div>
 </body>
 </html>
