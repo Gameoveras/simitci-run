@@ -1,6 +1,3 @@
-// Basit bir "Simitçi Run" oyununun temel HTML5 + JavaScript yapısı (Phaser 3 framework kullanarak)
-// Not: Gerçek oyunun sadece temel iskeletidir
-
 import Phaser from "phaser";
 
 class SimitciRun extends Phaser.Scene {
